@@ -43,7 +43,9 @@ runs/<date-time>/          report.md + one transcript per trial
 ## Running it
 
 Needs Python 3.10+ and one package (`pip install -r requirements.txt`). The script reads your
-key from the `ANTHROPIC_API_KEY` environment variable. It never writes or prints the key.
+key from the `EVALS_ANTHROPIC_API_KEY` environment variable (or, failing that, `ANTHROPIC_API_KEY`).
+It never writes or prints the key. In Claude Code cloud sessions use `EVALS_ANTHROPIC_API_KEY`:
+the sandbox appears to withhold `ANTHROPIC_*` variables, which Claude Code uses for its own login.
 
 ```bash
 python run.py --prompt v1 --tasks 5 --trials 1

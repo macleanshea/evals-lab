@@ -8,6 +8,7 @@ import argparse
 import datetime
 import json
 import math
+import os
 import pathlib
 from concurrent.futures import ThreadPoolExecutor
 
@@ -121,7 +122,12 @@ def main():
     all_tasks = {t["id"]: t for t in json.loads((DATA / "tasks.json").read_text())}
     task_ids = json.loads((ROOT / "tasks" / "fixed_20.json").read_text())["task_ids"][:args.tasks]
 
-    client = anthropic.Anthropic(max_retries=6)  # reads ANTHROPIC_API_KEY from the environment
+    # The key comes only from the environment, never from a file. EVALS_ANTHROPIC_API_KEY is
+    # checked first because cloud sessions may hold back ANTHROPIC_* variables for their own use.
+    key = os.environ.get("EVALS_ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")
+    if not key:
+        raise SystemExit("No API key: set EVALS_ANTHROPIC_API_KEY (or ANTHROPIC_API_KEY).")
+    client = anthropic.Anthropic(api_key=key, max_retries=6)
     started = datetime.datetime.now()
     run_dir = ROOT / "runs" / started.strftime("%Y-%m-%d_%H%M%S")
     run_dir.mkdir(parents=True)
