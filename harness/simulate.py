@@ -70,8 +70,8 @@ def run_trial(client, task, db, agent_system, user_system, tools, cfg):
             calls = [b for b in r.content if b.type == "tool_use"]
             if not calls:
                 break
-            if text_of(r):  # text sent alongside a tool call never reaches the customer
-                log.append({"who": "agent_aside", "text": text_of(r)})
+            # A tool-calling turn. Any text sent with it never reaches the customer.
+            log.append({"who": "agent_tool_turn", "text": text_of(r) or None})
             results = []
             for call in calls:
                 output, is_error = call_tool(db, call.name, call.input)

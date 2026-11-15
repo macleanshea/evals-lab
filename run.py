@@ -44,18 +44,24 @@ def one_trial(client, cfg, task, trial, agent_system, tools, db_text):
         verdict = grade(client, cfg["judge_model"], task, db, json.loads(db_text), log, ended, usage)
     except anthropic.APIError as e:
         log, usage = [], {}
-        verdict = {"passed": False, "ended_because": "api_error", "db_match": None,
-                   "db_diffs": [], "nl_results": None, "reason": f"API error: {e}"}
-    print(f"  task {task['id']} trial {trial}: {'PASS' if verdict['passed'] else 'FAIL'}"
-          f" - {verdict['reason'][:100]}", flush=True)
+        verdict = {"passed": False, "code_passed": False, "judge_graded": None,
+                   "ended_because": "api_error", "db_match": None, "db_diffs": [],
+                   "nl_results": None, "reason": f"API error: {e}"}
+    print(f"  task {task['id']} trial {trial}: code-only {pf(verdict['code_passed'])}, "
+          f"code+judge {pf(verdict['passed'])} - {verdict['reason'][:100]}", flush=True)
     return {"task": task, "trial": trial, "log": log, "usage": usage, "verdict": verdict}
 
 
-def pass_hat_k(results, k):
-    """τ-bench's pass^k: chance that k random trials of a task ALL pass, averaged over tasks."""
+def pf(ok):
+    return "PASS" if ok else "FAIL"
+
+
+def pass_hat_k(results, k, key="passed"):
+    """τ-bench's pass^k: chance that k random trials of a task ALL pass, averaged over tasks.
+    key="passed" scores the official verdict; key="code_passed" the code-only one."""
     by_task = {}
     for r in results:
-        by_task.setdefault(r["task"]["id"], []).append(r["verdict"]["passed"])
+        by_task.setdefault(r["task"]["id"], []).append(r["verdict"][key])
     scores = [math.comb(sum(v), k) / math.comb(len(v), k) for v in by_task.values()]
     return sum(scores) / len(scores)
 
@@ -73,8 +79,10 @@ def total_tokens(results):
 def write_transcript(path, r):
     t, v = r["task"], r["verdict"]
     out = [f"# Task {t['id']} - trial {r['trial']}", "",
-           f"**Verdict: {'PASS' if v['passed'] else 'FAIL'}** - {v['reason']}", "",
-           "## Grader details", "",
+           f"**Verdict (code + judge, official): {pf(v['passed'])}** - {v['reason']}  ",
+           f"Code-only verdict: {pf(v['code_passed'])}"
+           + ("" if v["judge_graded"] else " (this task has no judge checks, so both verdicts are the same)"),
+           "", "## Grader details", "",
            f"- Conversation ended because: `{v['ended_because']}`",
            f"- Database matches expected end state: {v['db_match']}"]
     out += [f"  - {d}" for d in v["db_diffs"]]
@@ -94,8 +102,8 @@ def write_transcript(path, r):
             out += [f"**Agent:** {m['text']}", ""]
         elif m["who"] == "user":
             out += [f"**Customer:** {m['text']}", ""]
-        elif m["who"] == "agent_aside":
-            out += [f"_Agent note sent with a tool call (not shown to customer):_ {m['text']}", ""]
+        elif m["who"] == "agent_tool_turn" and m["text"]:
+            out += [f"_Agent text sent with a tool call (not shown to customer):_ {m['text']}", ""]
         elif m["who"] == "tool":
             label = "Tool error" if m["error"] else "Result"
             out += [f"> **Tool call:** `{m['name']}` `{json.dumps(m['args'])}`  ",
@@ -129,26 +137,38 @@ def main():
 
     k = args.trials
     p1, pk = pass_hat_k(results, 1), pass_hat_k(results, k)
+    c1, ck = pass_hat_k(results, 1, "code_passed"), pass_hat_k(results, k, "code_passed")
     tokens = total_tokens(results)
     grand = sum(u["input"] + u["output"] for u in tokens.values())
     date = started.strftime("%Y-%m-%d %H:%M")
+    judged = [tid for tid in task_ids if any(
+        r["task"]["id"] == tid and r["verdict"]["judge_graded"] for r in results)]
 
-    summary = ["| Prompt | Tasks x trials | pass^1 | pass^k (k=%d) | Total tokens |" % k,
-               "|---|---|---|---|---|",
-               f"| {args.prompt} | {len(task_ids)} x {k} | {p1:.2f} | {pk:.2f} | {grand:,} |"]
+    summary = [f"| Grading | Tasks x trials | pass^1 | pass^k (k={k}) |",
+               "|---|---|---|---|",
+               f"| Code only | {len(task_ids)} x {k} | {c1:.2f} | {ck:.2f} |",
+               f"| Code + judge (official) | {len(task_ids)} x {k} | {p1:.2f} | {pk:.2f} |",
+               "", f"Prompt `{args.prompt}`. Total tokens: {grand:,}. "
+               f"Judge-graded tasks: {', '.join(judged) or 'none'}."]
     report = [f"# Run {run_dir.name}", "",
               f"Agent `{args.agent_model}` with `prompts/agent_{args.prompt}.md`; "
               f"customer simulator `{args.user_model}`; judge `{args.judge_model}`; "
               f"persona: {repr(args.persona) if args.persona else '(empty)'}", "",
               "## Summary", "", *summary, "",
-              "## Per-task results", "", "| Task | " + " | ".join(f"Trial {i}" for i in range(1, k + 1))
-              + " | Reason (first failing trial) |", "|---" * (k + 2) + "|"]
+              "**Code only** = the conversation ended normally and the database matches. "
+              "**Code + judge** additionally requires the LLM judge to accept every written "
+              "check; this is τ²-bench's own pass rule. They differ only on judge-graded tasks.", "",
+              "## Per-task results", "",
+              "Each cell: code-only / code + judge. Click for the transcript.", "",
+              "| Task | Judge-graded | " + " | ".join(f"Trial {i}" for i in range(1, k + 1))
+              + " | Reason (first trial failing the official verdict) |", "|---" * (k + 3) + "|"]
     for tid in task_ids:
         rs = sorted((r for r in results if r["task"]["id"] == tid), key=lambda r: r["trial"])
-        cells = [f"[{'PASS' if r['verdict']['passed'] else 'FAIL'}](task-{tid}_trial-{r['trial']}.md)"
-                 for r in rs]
+        cells = [f"[{pf(r['verdict']['code_passed'])} / {pf(r['verdict']['passed'])}]"
+                 f"(task-{tid}_trial-{r['trial']}.md)" for r in rs]
         fail = next((r["verdict"]["reason"] for r in rs if not r["verdict"]["passed"]), "")
-        report.append(f"| {tid} | " + " | ".join(cells) + f" | {fail.replace('|', '/')} |")
+        report.append(f"| {tid} | {'yes' if tid in judged else 'no'} | " + " | ".join(cells)
+                      + f" | {fail.replace('|', '/')} |")
     report += ["", "## Tokens", "", "| Role | Input | Output |", "|---|---|---|"]
     report += [f"| {role} | {u['input']:,} | {u['output']:,} |" for role, u in tokens.items()]
     report += [f"| **total** | | **{grand:,}** |"]
@@ -156,11 +176,13 @@ def main():
 
     log_path = ROOT / "runs" / "README.md"
     if not log_path.exists():
-        log_path.write_text("# Run log\n\nOne row per run. Click a date for the full report.\n\n"
-                            "| Date | Prompt | Tasks x trials | pass^1 | pass^k |\n|---|---|---|---|---|\n")
+        log_path.write_text("# Run log\n\nOne row per run. Click a date for the full report. "
+                            "Official scores = code + judge (τ²-bench's rule); code-only shown for reference.\n\n"
+                            "| Date | Prompt | Tasks x trials | pass^1 | pass^k | pass^1 code-only | pass^k code-only |\n"
+                            "|---|---|---|---|---|---|---|\n")
     with log_path.open("a") as f:
         f.write(f"| [{date}]({run_dir.name}/report.md) | {args.prompt} | "
-                f"{len(task_ids)} x {k} | {p1:.2f} | {pk:.2f} |\n")
+                f"{len(task_ids)} x {k} | {p1:.2f} | {pk:.2f} | {c1:.2f} | {ck:.2f} |\n")
 
     print("\n" + "\n".join(summary))
     print(f"\nReport: {run_dir / 'report.md'}")

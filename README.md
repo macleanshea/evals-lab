@@ -18,7 +18,7 @@ We copied only data:
 | `data/retail/policy.md` | The rules the agent must follow (verbatim) |
 | `data/retail/db.json` | The store's database: users, orders, products |
 | `data/retail/tasks.json` | 114 tasks: each has a hidden customer script and the expected outcome |
-| `data/retail/split_tasks.json` | τ²-bench's train/test split of those tasks |
+| `data/retail/split_tasks.json` | τ²-bench's split of those tasks: **train** 74, **test** 40 ("base" = all 114) |
 | `data/retail/tools.json` | The 16 tool definitions the agent sees, extracted from τ²-bench's tool docstrings |
 
 We did **not** use τ²-bench's runner or grader. The tools' behavior is ported line by line into
@@ -33,6 +33,8 @@ harness/simulate.py        one conversation: agent <-> customer simulator
 harness/grade.py           pass/fail for one conversation
 prompts/agent_v1.md        agent system prompt (policy verbatim + small wrapper)
 prompts/user_sim_v1.md     customer simulator instructions (τ²-bench's own)
+prompts/judge_system.md    judge instructions (τ²-bench's own, byte for byte)
+prompts/judge_user.md      judge message template (τ²-bench's own, byte for byte)
 tasks/fixed_20.json        the 20 task IDs used for every comparison run
 runs/README.md             one row per run
 runs/<date-time>/          report.md + one transcript per trial
@@ -54,7 +56,7 @@ python run.py --prompt v1 --tasks 5 --trials 1
 | `--trials` | `1` | k: how many times each task is run |
 | `--agent-model` | `claude-haiku-5-5` | the model being evaluated |
 | `--user-model` | `claude-sonnet-5-5` | the customer simulator |
-| `--judge-model` | `claude-sonnet-5-5` | grades the written checks some tasks have (see below) |
+| `--judge-model` | `claude-sonnet-5-5` | grades the written checks some tasks have, at low effort (see below) |
 | `--persona` | empty | extra persona text inserted into the customer's instructions |
 | `--workers` | `4` | how many conversations run at the same time |
 
@@ -82,10 +84,18 @@ A trial **passes** only if all three of these hold:
    But one wrong field, such as the wrong payment method or one extra item, fails the trial.
    For tasks where the correct outcome is "change nothing", an agent that does nothing passes this
    check.
-3. **Written checks are met.** 40 of the 114 tasks (4 of our fixed 20) also include plain-English
-   assertions, such as "Agent should tell the user that there are 10 t-shirt options available."
-   An LLM judge reads the conversation and must agree that every assertion was met. We use
-   τ²-bench's exact judge instructions.
+3. **Written checks are met.** 40 of the 114 tasks (29 of the 74 training tasks, 9 of our fixed 20)
+   also include plain-English assertions, such as "Agent should tell the user that there are
+   exactly 10 t-shirt options available." An LLM judge reads the conversation and must agree that
+   every assertion was met. These checks **count toward pass/fail**, because current τ²-bench does
+   the same (see "The judge" below).
+
+Each report shows two verdicts per trial:
+- **Code only:** checks 1 and 2. Plain code, with no LLM involved.
+- **Code + judge (official):** all three checks. This is τ²-bench's rule, and the run log's
+  headline numbers use it.
+
+The two verdicts differ only on judge-graded tasks, and the report marks which tasks those are.
 
 **Scores:** *pass^1* is the average success rate over all trials. *pass^k* (τ-bench's metric) is
 the chance that **all k** runs of a task pass, averaged over tasks. It measures reliability, so
@@ -93,12 +103,7 @@ it is never higher than pass^1.
 
 ### What we could not reproduce exactly
 
-- **Judge model.** τ²-bench's judge is an OpenAI model (`gpt-5.4-mini`, low reasoning). We use
-  Claude (`--judge-model`). The instructions are identical, but a different judge can disagree
-  on borderline cases. We also force the judge's answer into valid JSON (structured output);
-  τ²-bench just parses its text.
-- **Judge's view of tool calls.** τ²-bench prints turns that contain only tool calls as empty
-  "assistant" lines. We leave those lines out and keep the tool results.
+- **Judge model.** See "The judge" below.
 - **Randomness.** τ²-bench runs its models at temperature 0. Current Claude models don't accept a
   temperature setting, so repeated runs vary more. That is what pass^k measures.
 - **The agent's own greeting.** τ²-bench puts the greeting into the agent's history. Our agent's
@@ -120,6 +125,37 @@ it is never higher than pass^1.
   There is no fallback model.
 - **Thinking.** Both models use their default adaptive thinking. Its content isn't returned, so
   transcripts show only messages and tool calls.
+
+## The judge
+
+**Its prompt is τ²-bench's own text, unchanged.** The instructions (`prompts/judge_system.md`) and
+the message template (`prompts/judge_user.md`) are copied byte for byte from τ²-bench's
+`src/tau2/evaluator/evaluator_nl_assertions.py`. I checked (with a scripted dry run) that our filled-in prompt is
+identical to what τ²-bench's code would build from the same conversation. That includes how
+the conversation is written out: one `role: text` line per message, tool results as `tool: ...`,
+and a tool-only agent turn as `assistant: None`, exactly as τ²-bench prints it.
+
+What differs from upstream:
+
+| | τ²-bench | Here |
+|---|---|---|
+| Judge model | OpenAI `gpt-5.4-mini` | `claude-sonnet-5-5` (`--judge-model`) |
+| Thinking effort | `reasoning_effort="low"` | `effort: "low"` |
+| JSON output | parses the model's free text | the API forces the reply into the JSON shape the prompt asks for. The words are the same. |
+
+A different judge model can still disagree on borderline cases, which is why the report also
+shows the code-only score.
+
+**Do the written checks count?** Yes, in current τ²-bench. Its history:
+- **τ²-bench's first release (June 2025):** retail tasks were scored on database + "communicate"
+  checks, a plain-code test that certain strings (like `"10"`) appear in the agent's messages.
+  The 8 written assertions that existed then were informational only.
+- **τ³-bench 1.0.0 (March 2026, the version we copied):** 112 of the 114 retail tasks are scored
+  on database + written assertions (`reward_basis: ["DB", "NL_ASSERTION"]`), and the other 2 on
+  database only. The default evaluation multiplies these together, so a failed assertion fails the
+  task. The old "communicate" strings are still in the task file, but they aren't scored.
+
+We mirror the current behavior.
 
 ## Prompts
 
@@ -148,6 +184,10 @@ hidden script) are filled in for each trial.
 
 ## Fixed task set
 
-`tasks/fixed_20.json` holds 20 task IDs, drawn once (random seed 42) from τ²-bench's held-out
-**test** split. Every comparison run uses this list, so prompt versions are compared on the same
-tasks. `--tasks 5` uses the first five.
+`tasks/fixed_20.json` holds 20 task IDs, drawn once at random (seed 42) from τ²-bench's **train**
+split. Every comparison run uses this list, so prompt versions are compared on the same tasks.
+The **test** split (40 tasks) is held out and not used for anything yet.
+
+`--tasks 5` uses the first five: 19, 3, 52, 46 and 41. Three of them (19, 3, 46) have written
+checks, so even the smallest run exercises the judge. The tool that built the list would have
+swapped a judge-graded task into the top five if the random draw hadn't included one, but it did.
