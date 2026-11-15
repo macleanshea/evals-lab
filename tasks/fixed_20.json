@@ -1,0 +1,25 @@
+{
+  "description": "Fixed comparison set: 20 retail task IDs drawn once (random seed 42) from tau2-bench's held-out 'test' split. Use for every comparison run. --tasks N uses the first N.",
+  "task_ids": [
+    "5",
+    "9",
+    "12",
+    "26",
+    "27",
+    "32",
+    "33",
+    "45",
+    "49",
+    "51",
+    "53",
+    "56",
+    "60",
+    "71",
+    "77",
+    "86",
+    "94",
+    "102",
+    "108",
+    "111"
+  ]
+}
