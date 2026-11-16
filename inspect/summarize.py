@@ -30,7 +30,10 @@ def main(path, k=None):
     by_task = defaultdict(list)
     for s in log.samples:
         sc = next(iter(s.scores.values()))
-        by_task[str(s.id)].append((s.epoch, sc.value == "C", sc.explanation, len(s.messages)))
+        # "turns" = messages in the customer-side conversation (what the port records;
+        # slim_log.py moves it to the store and shows the agent's view instead)
+        turns = len(s.store.get("original_messages_customer_side", s.messages))
+        by_task[str(s.id)].append((s.epoch, sc.value == "C", sc.explanation, turns))
     n = log.eval.config.epochs or 1
     k = int(k) if k else n
     print(f"Log: {path}\nTasks: {len(by_task)}  Epochs: {n}\n")

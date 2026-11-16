@@ -40,7 +40,7 @@ The differences that matter:
 
 ## Reading a transcript in the viewer
 
-In the port, the roles in the main **Messages** tab are flipped. Messages labelled **assistant** are the *customer* (the simulator is the model being driven), and messages labelled **user** are the *agent's* replies. The agent's tool calls aren't in Messages. To see them, open the **Transcript** tab and look at the `model` events from `claude-haiku-5-5`, or look in **Store** → `StoredAgentState:AirlineAgent:messages`. The score's explanation is under **Scoring**.
+The port records the main conversation from the customer simulator's side, so in its own log the customer is "assistant" and the agent is "user". Our slimmed logs swap this after scoring (`slim_log.py`), so in the **Messages** tab **assistant = the agent** and **user = the customer**, with the agent's tool calls and their results in line. The port's original customer-side copy is in **Store** → `original_messages_customer_side`. The score and its explanation are under **Scoring**.
 
 ## pass^k
 
