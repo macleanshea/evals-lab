@@ -15,8 +15,9 @@ Task sets (see `tasks/fixed_set.json`): runs up to 2026-11-16 00:12 used set v1;
 
 ## Inspect runs (τ²-bench airline, `inspect_evals/tau2_airline`)
 
-Different domain and grader from the table above (airline, code-only grading: database + required facts, no LLM judge; see `inspect/NOTES.md`), so not comparable to it. Agent Haiku 5.5, customer simulator Sonnet 5.5. Viewer: `inspect/logs-www/` (served by Vercel once set up).
+Logs in `inspect/logs/` are slimmed copies (the airline database snapshots removed; see `inspect/slim_log.py`). Different domain and grader from the table above (airline, code-only grading: database + required facts, no LLM judge; see `inspect/NOTES.md`), so not comparable to it. Agent Haiku 5.5, customer simulator Sonnet 5.5. Viewer: `inspect/logs-www/` (served by Vercel once set up).
 
 | Date | Tasks (airline ids) | Tasks x epochs | pass^1 | pass^k | Tokens (agent / simulator) | Cost | Log |
 |---|---|---|---|---|---|---|---|
 | [2026-11-16 16:29](../inspect/reports/2026-11-16T16-29-43_tau2-airline_5x1.txt) | 0,1,3,4,5 | 5 x 1 | 0.80 | – | 332k / 40k | $0.07 | [.eval](../inspect/logs/2026-11-16T16-29-43-00-00_tau2-airline_hxZoWMmxJjwFTmr2kxJ95v.eval) |
+| [2026-11-16 16:48](../inspect/reports/2026-11-16T16-48-39_tau2-airline_20x4.txt) | first 20 of the train split: 0,1,3,4,5,7,9,10,11,12,14,15,17,20,21,23,27,28,33,34 | 20 x 4 | 0.64 | 0.55 | 7.31M / 0.75M | $1.27 | [.eval](../inspect/logs/2026-11-16T16-48-39-00-00_tau2-airline_RCuQu5GYUMrKiPcEVyBNAQ.eval) |

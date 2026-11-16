@@ -17,7 +17,14 @@ config = {
     "buildCommand": "",
     "installCommand": "",
     "outputDirectory": ".",
-    "headers": [{"source": "/(.*)", "headers": [{"key": "Content-Security-Policy", "value": header}]}],
+    "headers": [
+        {"source": "/(.*)", "headers": [{"key": "Content-Security-Policy", "value": header}]},
+        # .eval logs are zip archives. Vercel doesn't know the extension and serves
+        # them compressed, with no Content-Length and no byte ranges; the viewer
+        # needs one of those ("Could not determine content length"). As
+        # application/zip they are served as-is, with both.
+        {"source": "/logs/(.*)\\.eval", "headers": [{"key": "Content-Type", "value": "application/zip"}]},
+    ],
 }
 (www / "vercel.json").write_text(json.dumps(config, indent=2) + "\n")
 print(f"Wrote {www / 'vercel.json'}")

@@ -48,4 +48,4 @@ Inspect reports `accuracy`, which is pass^1: the share of all task × epoch atte
 
 ## Log size
 
-The port keeps a copy of the 3.3 MB airline database in each transcript's state, about six times over, so each sample adds about 3 MB to the zipped log. 5 samples come to 16 MB. 80 samples would be about 250 MB, over GitHub's 100 MB per-file limit.
+The port keeps a copy of the 3.3 MB airline database in each transcript's state, about six times over, so each sample adds about 3 MB to the zipped log. A 20 × 4 run is about 250 MB, over GitHub's 100 MB per-file limit. `run.sh` therefore writes the full log to `inspect/logs-raw/` (not committed, and lost when the machine is reset) and a slimmed copy to `inspect/logs/` (`slim_log.py`: database snapshots removed; conversations, tool calls, scores and token usage kept; about 30 KB per sample). The viewer and `summarize.py` read the slimmed copies.
