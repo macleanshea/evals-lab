@@ -15,7 +15,7 @@ Task sets (see `tasks/fixed_set.json`): runs up to 2026-11-16 00:12 used set v1;
 
 ## Inspect runs (τ²-bench airline, `inspect_evals/tau2_airline`)
 
-Different domain and grader from the table above (airline, code-only grading: database + required facts, no LLM judge; see `inspect/NOTES.md`), so not comparable to it. Agent Haiku 5.5, customer simulator Sonnet 5.5. Viewer: `inspect/logs-www/` (served by Vercel once set up).
+Logs in `inspect/logs/` are slimmed copies (the airline database snapshots removed; see `inspect/slim_log.py`). Different domain and grader from the table above (airline, code-only grading: database + required facts, no LLM judge; see `inspect/NOTES.md`), so not comparable to it. Agent Haiku 5.5, customer simulator Sonnet 5.5. Viewer: `inspect/logs-www/` (served by Vercel once set up).
 
 | Date | Tasks (airline ids) | Tasks x epochs | pass^1 | pass^k | Tokens (agent / simulator) | Cost | Log |
 |---|---|---|---|---|---|---|---|
