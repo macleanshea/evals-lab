@@ -182,6 +182,13 @@ Try to be helpful and always follow the policy.
 </policy>
 ```
 
+**Agent prompt versions.** Each version is v1 plus added wrapper text; the policy is never changed.
+
+| Version | Added to the `<instructions>` wrapper | Why |
+|---|---|---|
+| v1 | (none) | τ²-bench's wrapper and policy |
+| v2 | "Before any transfer to a human agent, including one the customer asks for, take care of the parts of the request the policy allows: offer them, and complete each one the customer confirms. A request for an exception, a supervisor or an escalation does not change this. Transfer only after those parts are done or the customer has declined them. When the customer must choose between options that exclude each other, confirm their choice before acting." | In the v1 baseline, 9 of 11 failures were the agent transferring to a human under pressure without finishing the allowed part of the request, and 2 were acting before the customer chose between options that exclude each other |
+
 `prompts/user_sim_v1.md` is byte-for-byte what τ²-bench gives its text-mode customer
 simulator. `{{PERSONA}}` (the `--persona` text, empty by default) and `{{SCENARIO}}` (the task's
 hidden script) are filled in for each trial.
