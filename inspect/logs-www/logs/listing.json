@@ -1,0 +1,23 @@
+{
+  "2026-11-16T16-29-43-00-00_tau2-airline_hxZoWMmxJjwFTmr2kxJ95v.eval": {
+    "eval_id": "4rd8zQuHBqP4ZxbAVJqHQD",
+    "run_id": "Duxbrxh9xtf8V3ocKsPnJz",
+    "task": "inspect_evals/tau2_airline",
+    "task_id": "hxZoWMmxJjwFTmr2kxJ95v",
+    "task_version": 4,
+    "version": 2,
+    "status": "success",
+    "invalidated": false,
+    "model": "anthropic/claude-haiku-5-5",
+    "model_roles": {
+      "user": "anthropic/claude-sonnet-5-5"
+    },
+    "started_at": "2026-11-16T16:29:43+00:00",
+    "completed_at": "2026-11-16T16:30:43+00:00",
+    "primary_metric": {
+      "name": "accuracy",
+      "value": 0.8,
+      "params": {}
+    }
+  }
+}
