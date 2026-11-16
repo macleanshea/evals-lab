@@ -24,7 +24,7 @@ DATA = ROOT / "data" / "retail"
 def parse_args():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--prompt", default="v1", help="agent prompt version: v1 -> prompts/agent_v1.md")
-    p.add_argument("--tasks", type=int, default=20, help="first N tasks of tasks/fixed_20.json")
+    p.add_argument("--tasks", type=int, default=None, help="first N tasks of tasks/fixed_set.json (default: all 20)")
     p.add_argument("--trials", type=int, default=1, help="k trials per task")
     p.add_argument("--agent-model", default="claude-haiku-5-5")
     p.add_argument("--user-model", default="claude-sonnet-5-5")
@@ -133,7 +133,7 @@ def main():
     tools = json.loads((DATA / "tools.json").read_text())
     db_text = (DATA / "db.json").read_text()
     all_tasks = {t["id"]: t for t in json.loads((DATA / "tasks.json").read_text())}
-    task_ids = json.loads((ROOT / "tasks" / "fixed_20.json").read_text())["task_ids"][:args.tasks]
+    task_ids = json.loads((ROOT / "tasks" / "fixed_set.json").read_text())["task_ids"][:args.tasks]
 
     # The key comes only from the environment, never from a file. EVALS_ANTHROPIC_API_KEY is
     # checked first because cloud sessions may hold back ANTHROPIC_* variables for their own use.

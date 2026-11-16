@@ -35,7 +35,7 @@ prompts/agent_v1.md        agent system prompt (policy verbatim + small wrapper)
 prompts/user_sim_v1.md     customer simulator instructions (τ²-bench's own)
 prompts/judge_system.md    judge instructions (τ²-bench's own, byte for byte)
 prompts/judge_user.md      judge message template (τ²-bench's own, byte for byte)
-tasks/fixed_20.json        the 20 task IDs used for every comparison run
+tasks/fixed_set.json       the 20 task IDs used for every comparison run
 runs/README.md             one row per run
 runs/<date-time>/          report.md + one transcript per trial
 ```
@@ -54,7 +54,7 @@ python run.py --prompt v1 --tasks 5 --trials 1
 | Option | Default | Meaning |
 |---|---|---|
 | `--prompt` | `v1` | uses `prompts/agent_<version>.md` |
-| `--tasks` | `20` | first N task IDs from `tasks/fixed_20.json` |
+| `--tasks` | all 20 | first N task IDs from `tasks/fixed_set.json` |
 | `--trials` | `1` | k: how many times each task is run |
 | `--agent-model` | `claude-haiku-5-5` | the model being evaluated |
 | `--user-model` | `claude-sonnet-5-5` | the customer simulator |
@@ -87,7 +87,7 @@ A trial **passes** only if all three of these hold:
    But one wrong field, such as the wrong payment method or one extra item, fails the trial.
    For tasks where the correct outcome is "change nothing", an agent that does nothing passes this
    check.
-3. **Written checks are met.** 40 of the 114 tasks (29 of the 74 training tasks, 9 of our fixed 20)
+3. **Written checks are met.** 40 of the 114 tasks (29 of the 74 training tasks, 8 of our fixed 20)
    also include plain-English assertions, such as "Agent should tell the user that there are
    exactly 10 t-shirt options available." An LLM judge reads the conversation and must agree that
    every assertion was met. These checks **count toward pass/fail**, because current τ²-bench does
@@ -187,10 +187,22 @@ hidden script) are filled in for each trial.
 
 ## Fixed task set
 
-`tasks/fixed_20.json` holds 20 task IDs, drawn once at random (seed 42) from τ²-bench's **train**
+`tasks/fixed_set.json` holds 20 task IDs, drawn once at random (seed 42) from τ²-bench's **train**
 split. Every comparison run uses this list, so prompt versions are compared on the same tasks.
 The **test** split (40 tasks) is held out and not used for anything yet.
 
-`--tasks 5` uses the first five: 19, 3, 52, 46 and 41. Three of them (19, 3, 46) have written
-checks, so even the smallest run exercises the judge. The tool that built the list would have
-swapped a judge-graded task into the top five if the random draw hadn't included one, but it did.
+**Changed on 2026-11-16.** Three tasks were removed because their own task data is contradictory,
+so no agent can pass them under the official rule:
+
+| Removed | Problem | Upstream report | Replaced by |
+|---|---|---|---|
+| 52 | Expected exchange changes the camera's resolution, which the customer script forbids | [issue #715](https://github.com/sierra-research/tau2-bench/issues/715) | 88 |
+| 105 | Expected exchange is impossible ($21.10 difference, $17.00 gift card is the only payment method) | [issue #321](https://github.com/sierra-research/tau2-bench/issues/321), [PR #571](https://github.com/sierra-research/tau2-bench/pull/571) | 20 |
+| 110 | Written check requires changing a default address that is already correct | none; Amazon's [τ²-Bench-Verified](https://github.com/amazon-agi/tau2-bench-verified) fixed the same flaw in sibling task 109 | 2 |
+
+The replacements were drawn at random (seed 42) from the unused training tasks, skipping any whose
+expected database changes fail when replayed (none needed skipping). Each takes the removed task's
+place in the list. Runs before this date used the old set; the run log notes which.
+
+`--tasks 5` uses the first five: 19, 3, 88, 46 and 41. Three of them (19, 3, 46) have written
+checks, so even the smallest run exercises the judge.
