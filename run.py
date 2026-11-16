@@ -43,11 +43,16 @@ def one_trial(client, cfg, task, trial, agent_system, tools, db_text):
     try:
         log, ended, usage = run_trial(client, task, db, agent_system, user_system, tools, cfg)
         verdict = grade(client, cfg["judge_model"], task, db, json.loads(db_text), log, ended, usage)
-    except anthropic.APIError as e:
+    except Exception as e:  # any failure fails this trial only; the rest of the run carries on
+        kind = "api_error" if isinstance(e, anthropic.APIError) else "harness_error"
         log, usage = [], {}
-        verdict = {"passed": False, "code_passed": False, "judge_graded": None,
-                   "ended_because": "api_error", "db_match": None, "db_diffs": [],
-                   "nl_results": None, "reason": f"API error: {e}"}
+        criteria = task["evaluation_criteria"]
+        verdict = {"passed": False, "code_passed": False,
+                   "judge_graded": "NL_ASSERTION" in criteria["reward_basis"]
+                                   and bool(criteria.get("nl_assertions")),
+                   "ended_because": kind, "db_match": None, "db_diffs": [], "nl_results": None,
+                   "reason": f"{'API' if kind == 'api_error' else 'Unexpected'} error "
+                             f"({type(e).__name__}): {e}"}
     print(f"  task {task['id']} trial {trial}: code-only {pf(verdict['code_passed'])}, "
           f"code+judge {pf(verdict['passed'])} - {verdict['reason'][:100]}", flush=True)
     return {"task": task, "trial": trial, "log": log, "usage": usage, "verdict": verdict}
