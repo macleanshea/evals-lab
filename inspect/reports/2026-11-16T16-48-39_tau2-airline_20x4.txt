@@ -31,4 +31,4 @@ Tokens and cost:
   anthropic/claude-haiku-5-5: input 2,140, cache write 599,006, cache read 6,446,425, output 257,838 (of which reasoning 115,019) -> $0.268
   total: $1.272
 
-Answer field annotated afterwards by inspect/annotate_answers.py: judge (Sonnet 5.5) 410,513 input / 22,931 output tokens -> $1.05. Target items: 152 Yes, 72 No.
+Answer field annotated afterwards by inspect/annotate_answers.py: judge (Sonnet 5.5) 410,513 input / 22,931 output tokens -> $1.05. Target items: 152 Pass, 72 Fail.
