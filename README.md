@@ -4,6 +4,23 @@ A deliberately small eval harness, built for learning. It runs a customer-servic
 (one Claude model with retail tools) against a simulated **customer** (a second Claude model
 following a hidden script), then **grades** each conversation the way τ²-bench does.
 
+## Inspect version (airline)
+
+Alongside the hand-built harness, `inspect/` runs τ²-bench's **airline** domain through
+[Inspect](https://inspect.aisi.org.uk/) (`inspect-ai`), using the ready-made port in `inspect-evals`.
+The hand-built harness below is unchanged.
+
+- **Run:** `inspect/run.sh <task ids> <epochs>`, e.g. `inspect/run.sh 0,1,3,4,5 1`. Agent Haiku 5.5,
+  customer simulator Sonnet 5.5. It runs the eval, saves a slimmed log to `inspect/logs/`, fills in
+  each sample's Answer field and rebuilds the viewer.
+- **View transcripts:** https://evals-lab-three.vercel.app. A static Inspect viewer built from
+  `inspect/logs-www/`; it updates when changes are merged to `main`.
+- **Read first:** [`inspect/NOTES.md`](inspect/NOTES.md). It maps Inspect's terms onto this harness
+  and explains how airline grading differs from our retail grader. The main difference is that
+  airline grading is code-only, with no LLM judge.
+- **Results:** the "Inspect runs" table in [`runs/README.md`](runs/README.md). Airline and retail
+  scores are not comparable.
+
 ## Source data and license
 
 The retail domain data comes from [sierra-research/tau2-bench](https://github.com/sierra-research/tau2-bench)
