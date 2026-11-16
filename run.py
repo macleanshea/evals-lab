@@ -25,6 +25,8 @@ def parse_args():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--prompt", default="v1", help="agent prompt version: v1 -> prompts/agent_v1.md")
     p.add_argument("--tasks", type=int, default=None, help="first N tasks of tasks/fixed_set.json (default: all 20)")
+    p.add_argument("--split", choices=["train"], default=None,
+                   help="run every task in this τ²-bench split instead of the fixed set (the test split stays held out)")
     p.add_argument("--trials", type=int, default=1, help="k trials per task")
     p.add_argument("--agent-model", default="claude-haiku-5-5")
     p.add_argument("--user-model", default="claude-sonnet-5-5")
@@ -133,7 +135,12 @@ def main():
     tools = json.loads((DATA / "tools.json").read_text())
     db_text = (DATA / "db.json").read_text()
     all_tasks = {t["id"]: t for t in json.loads((DATA / "tasks.json").read_text())}
-    task_ids = json.loads((ROOT / "tasks" / "fixed_set.json").read_text())["task_ids"][:args.tasks]
+    if args.split:
+        task_ids = json.loads((DATA / "split_tasks.json").read_text())[args.split][:args.tasks]
+        task_source = f"all tasks in the τ²-bench `{args.split}` split"
+    else:
+        task_ids = json.loads((ROOT / "tasks" / "fixed_set.json").read_text())["task_ids"][:args.tasks]
+        task_source = "`tasks/fixed_set.json`"
 
     # The key comes only from the environment, never from a file. EVALS_ANTHROPIC_API_KEY is
     # checked first because cloud sessions may hold back ANTHROPIC_* variables for their own use.
@@ -170,6 +177,7 @@ def main():
                "", f"Prompt `{args.prompt}`. Total tokens: {grand:,}. "
                f"Judge-graded tasks: {', '.join(judged) or 'none'}."]
     report = [f"# Run {run_dir.name}", "",
+              f"Tasks: {task_source}.", "",
               f"Agent `{args.agent_model}` with `prompts/agent_{args.prompt}.md`; "
               f"customer simulator `{args.user_model}`; judge `{args.judge_model}`; "
               f"persona: {persona_label}", "",

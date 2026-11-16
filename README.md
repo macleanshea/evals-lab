@@ -55,6 +55,7 @@ python run.py --prompt v1 --tasks 5 --trials 1
 |---|---|---|
 | `--prompt` | `v1` | uses `prompts/agent_<version>.md` |
 | `--tasks` | all 20 | first N task IDs from `tasks/fixed_set.json` |
+| `--split` | none | `train`: run every training task instead of the fixed set (used to find hard tasks) |
 | `--trials` | `1` | k: how many times each task is run |
 | `--agent-model` | `claude-haiku-5-5` | the model being evaluated |
 | `--user-model` | `claude-sonnet-5-5` | the customer simulator |
