@@ -1,0 +1,42 @@
+Log: inspect/logs/2026-11-16T21-45-28-00-00_tau2-airline-custom_MZrsGr8ah884Z6HjrEPaWE.eval
+Tasks: 30  Epochs: 4
+
+task  epochs passed  turns  first failure reason
+   0  4/4     9,9,9,9  
+   1  4/4    11,9,9,9  
+   3  4/4     9,9,9,9  
+   4  4/4  13,13,11,13  
+   5  4/4  15,13,13,13  
+   7  0/4  15,13,11,15  The retail database does not match the expected state after performing the required action
+   9  0/4     7,7,7,7  The retail database does not match the expected state after performing the required action
+  10  4/4  11,11,11,11  
+  11  4/4  11,9,11,11  
+  12  4/4  15,13,15,9  
+  14  0/4  11,9,11,11  The retail database does not match the expected state after performing the required action
+  15  4/4  11,11,11,11  
+  17  4/4     9,9,7,9  
+  20  4/4  17,13,17,15  
+  21  3/4  15,13,15,13  The retail database does not match the expected state after performing the required action
+  23  0/4  11,13,13,25  The retail database does not match the expected state after performing the required action
+  27  0/4  13,11,11,11  The retail database does not match the expected state after performing the required action
+  28  4/4  13,15,15,15  
+  33  0/4  17,19,17,19  The retail database does not match the expected state after performing the required action
+  34  4/4  9,13,13,11  
+  36  4/4     9,9,9,9  
+  38  0/4  9,17,11,13  The retail database does not match the expected state after performing the required action
+  39  0/4   9,13,9,11  The retail database does not match the expected state after performing the required action
+  40  4/4    9,9,11,9  
+  41  4/4     9,9,9,9  
+  42  4/4   11,11,9,9  
+  43  4/4  13,13,11,13  
+  46  4/4     9,9,9,9  
+  47  4/4  15,15,21,19  
+  49  4/4  11,13,11,11  
+
+pass^1 = 0.72
+pass^4 = 0.70
+
+Tokens and cost:
+  anthropic/claude-sonnet-5-5: input 2,560, cache write 266,619, cache read 786,706, output 99,565 (of which reasoning 30,692) -> $1.825
+  anthropic/claude-haiku-5-5: input 2,964, cache write 748,186, cache read 9,410,599, output 343,999 (of which reasoning 148,206) -> $0.360
+  total: $2.185
