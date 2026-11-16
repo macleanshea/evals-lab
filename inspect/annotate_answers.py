@@ -1,7 +1,7 @@
 """Fill the viewer's "Answer" field for each sample of a (slimmed) Inspect τ²-bench airline log.
 
 The port's grader leaves Answer blank. This writes, per sample:
-  1. Yes / No for each item in the Target (the task's natural-language assertions),
+  1. Pass / Fail for each item in the Target (the task's natural-language assertions),
      decided by an LLM judge reading the conversation. The port does NOT grade these
      assertions; this is for reading only and never changes the score.
      Judge: τ²-bench's own judge prompt (prompts/judge_*.md, the same text our retail
@@ -11,7 +11,8 @@ The port's grader leaves Answer blank. This writes, per sample:
      expected ones the agent never made. Compared in code, no model involved.
 
 The judge's per-item reasoning is kept in the score's metadata (Scoring tab).
-Samples already annotated are skipped, so re-running costs nothing.
+Samples already judged are not sent to the judge again: their Answer is rebuilt from
+the stored verdicts, so re-running (e.g. after changing the wording) costs nothing.
 Usage: python inspect/annotate_answers.py <slimmed.eval> [<slimmed.eval> ...]
 """
 import json
@@ -105,7 +106,8 @@ def answer_text(results, assertions, unexpected, missing):
         lines.append("Target items: the judge declined to assess this conversation.")
     else:
         for a, r in zip(assertions, results):
-            lines.append(f"- **{'Yes' if r['metExpectation'] else 'No'}**: {a}")
+            # Pass = the item was met, Fail = it was not, whatever way the item is worded.
+            lines.append(f"- **{'Pass' if r['metExpectation'] else 'Fail'}**: {a}")
     lines.append("")
     lines.append("**Also did:** " + ("; ".join(unexpected) if unexpected else "nothing else"))
     if missing:
@@ -117,6 +119,14 @@ def answer_text(results, assertions, unexpected, missing):
 def annotate(path, client, usage_total):
     log = read_eval_log(path)
     todo = [s for s in log.samples if DONE_KEY not in (next(iter(s.scores.values())).metadata or {})]
+    # Already judged: rebuild the Answer text from the stored verdicts, no API call.
+    for s in log.samples:
+        if s in todo:
+            continue
+        score = next(iter(s.scores.values()))
+        assertions = s.metadata["task"]["evaluation_criteria"].get("nl_assertions") or []
+        unexpected, missing = action_diff(s)
+        score.answer = answer_text(score.metadata[DONE_KEY]["results"], assertions, unexpected, missing)
 
     def work(s):
         assertions = s.metadata["task"]["evaluation_criteria"].get("nl_assertions") or []
@@ -135,7 +145,7 @@ def annotate(path, client, usage_total):
                 "model": JUDGE_MODEL, "results": results,
                 "note": "For reading only. The port's airline grader does not use these assertions."}}
     write_eval_log(log, path)
-    print(f"Annotated {len(todo)} of {len(log.samples)} samples in {path}")
+    print(f"Judged {len(todo)} new samples; refreshed the Answer of all {len(log.samples)} in {path}")
 
 
 def main(paths):

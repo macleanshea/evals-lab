@@ -45,7 +45,7 @@ The port records the main conversation from the customer simulator's side, so in
 ## The Answer field
 
 The port's grader leaves each sample's **Answer** blank. `annotate_answers.py`, run by `run.sh` after each run, fills it with:
-- **Yes / No for each Target item.** The Target items are the task's written assertions. The port doesn't grade them, so an LLM judge (Sonnet 5.5, with τ²-bench's own judge prompt, the same one our retail grader uses) reads the conversation and decides. This is for reading only: it never changes the score, and a task can pass with a "No" or fail with all "Yes". The judge's reasoning for each item is in the score's metadata on the **Scoring** tab.
+- **Pass / Fail for each Target item.** Pass means the item was met and Fail means it wasn't, however the item is worded. The Target items are the task's written assertions. The port doesn't grade them, so an LLM judge (Sonnet 5.5, with τ²-bench's own judge prompt, the same one our retail grader uses) reads the conversation and decides. This is for reading only: it never changes the score, and a task can pass with an item marked Fail, or fail with every item marked Pass. The judge's reasoning for each item is in the score's metadata on the **Scoring** tab.
 - **Also did:** database-changing actions (and transfers to a human) that the task didn't expect, compared in code.
 - **Expected but not done:** expected actions the agent never made, or got wrong.
 
