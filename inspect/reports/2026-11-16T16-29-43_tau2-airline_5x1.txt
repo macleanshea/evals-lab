@@ -1,0 +1,16 @@
+Log: inspect/logs/2026-11-16T16-29-43-00-00_tau2-airline_hxZoWMmxJjwFTmr2kxJ95v.eval
+Tasks: 5  Epochs: 1
+
+task  epochs passed  turns  first failure reason
+   0  1/1          11  
+   1  1/1          11  
+   3  1/1           9  
+   4  1/1          13  
+   5  0/1          15  The retail database does not match the expected state after performing the required action
+
+pass^1 = 0.80
+
+Tokens and cost:
+  anthropic/claude-sonnet-5-5: input 108, cache write 10,103, cache read 27,071, output 2,820 (of which reasoning 1,227) -> $0.059
+  anthropic/claude-haiku-5-5: input 118, cache write 37,705, cache read 285,587, output 8,396 (of which reasoning 2,539) -> $0.012
+  total: $0.071
