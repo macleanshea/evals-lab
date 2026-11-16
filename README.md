@@ -60,6 +60,7 @@ python run.py --prompt v1 --tasks 5 --trials 1
 | `--user-model` | `claude-sonnet-5-5` | the customer simulator |
 | `--judge-model` | `claude-sonnet-5-5` | grades the written checks some tasks have, at low effort (see below) |
 | `--persona` | empty | extra persona text inserted into the customer's instructions |
+| `--persona-file` | none | use `prompts/persona_<name>.md` as the persona, e.g. `pushback` |
 | `--workers` | `4` | how many conversations run at the same time |
 
 Every trial starts from a fresh copy of `db.json`, so one conversation can never affect another.

@@ -31,6 +31,8 @@ def parse_args():
     p.add_argument("--judge-model", default="claude-sonnet-5-5",
                    help="grades the natural-language assertions some tasks have")
     p.add_argument("--persona", default="", help="optional extra persona text for the customer")
+    p.add_argument("--persona-file", default="",
+                   help="use prompts/persona_<name>.md as the persona, e.g. --persona-file pushback")
     p.add_argument("--workers", type=int, default=4, help="trials run in parallel")
     return p.parse_args()
 
@@ -119,6 +121,12 @@ def write_transcript(path, r):
 
 def main():
     args = parse_args()
+    persona_label = "none"
+    if args.persona_file:
+        args.persona = (ROOT / "prompts" / f"persona_{args.persona_file}.md").read_text().strip()
+        persona_label = args.persona_file
+    elif args.persona:
+        persona_label = "custom (see report)"
     cfg = {"agent_model": args.agent_model, "user_model": args.user_model,
            "judge_model": args.judge_model, "persona": args.persona}
     agent_system = (ROOT / "prompts" / f"agent_{args.prompt}.md").read_text()
@@ -164,7 +172,8 @@ def main():
     report = [f"# Run {run_dir.name}", "",
               f"Agent `{args.agent_model}` with `prompts/agent_{args.prompt}.md`; "
               f"customer simulator `{args.user_model}`; judge `{args.judge_model}`; "
-              f"persona: {repr(args.persona) if args.persona else '(empty)'}", "",
+              f"persona: {persona_label}", "",
+              *([f"> {args.persona}", ""] if args.persona else []),
               "## Summary", "", *summary, "",
               "**Code only** = the conversation ended normally and the database matches. "
               "**Code + judge** additionally requires the LLM judge to accept every written "
@@ -189,10 +198,10 @@ def main():
     if not log_path.exists():
         log_path.write_text("# Run log\n\nOne row per run. Click a date for the full report. "
                             "Official scores = code + judge (τ²-bench's rule); code-only shown for reference.\n\n"
-                            "| Date | Prompt | Tasks x trials | pass^1 | pass^k | pass^1 code-only | pass^k code-only |\n"
-                            "|---|---|---|---|---|---|---|\n")
+                            "| Date | Prompt | Persona | Tasks x trials | pass^1 | pass^k | pass^1 code-only | pass^k code-only |\n"
+                            "|---|---|---|---|---|---|---|---|\n")
     with log_path.open("a") as f:
-        f.write(f"| [{date}]({run_dir.name}/report.md) | {args.prompt} | "
+        f.write(f"| [{date}]({run_dir.name}/report.md) | {args.prompt} | {persona_label} | "
                 f"{len(task_ids)} x {k} | {p1:.2f} | {pk:.2f} | {c1:.2f} | {ck:.2f} |\n")
 
     print("\n" + "\n".join(summary))
