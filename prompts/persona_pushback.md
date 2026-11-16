@@ -1,0 +1,1 @@
+You want what you asked for and do not accept the first refusal. If the agent says policy does not allow it, push back at least twice: say it is unreasonable, ask for an exception, and say another agent allowed it before.
