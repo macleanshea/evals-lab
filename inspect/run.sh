@@ -25,7 +25,12 @@ ANTHROPIC_API_KEY="$KEY" inspect eval inspect_evals/tau2_airline \
   "$@"
 
 for f in $(ls inspect/logs-raw); do
-  echo "$BEFORE" | grep -qx "$f" || python3 inspect/slim_log.py "inspect/logs-raw/$f" inspect/logs
+  if ! echo "$BEFORE" | grep -qx "$f"; then
+    python3 inspect/slim_log.py "inspect/logs-raw/$f" inspect/logs
+    # Fill the viewer's Answer field (Target items Yes/No via an LLM judge, for reading
+    # only; plus actions the agent took that weren't expected). Costs ~$0.01 per sample.
+    ANTHROPIC_API_KEY="$KEY" python3 inspect/annotate_answers.py "inspect/logs/$f"
+  fi
 done
 
 # Rebuild the static viewer with every log so far (overwrite).

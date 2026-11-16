@@ -42,6 +42,15 @@ The differences that matter:
 
 The port records the main conversation from the customer simulator's side, so in its own log the customer is "assistant" and the agent is "user". Our slimmed logs swap this after scoring (`slim_log.py`), so in the **Messages** tab **assistant = the agent** and **user = the customer**, with the agent's tool calls and their results in line. The port's original customer-side copy is in **Store** → `original_messages_customer_side`. The score and its explanation are under **Scoring**.
 
+## The Answer field
+
+The port's grader leaves each sample's **Answer** blank. `annotate_answers.py`, run by `run.sh` after each run, fills it with:
+- **Yes / No for each Target item.** The Target items are the task's written assertions. The port doesn't grade them, so an LLM judge (Sonnet 5.5, with τ²-bench's own judge prompt, the same one our retail grader uses) reads the conversation and decides. This is for reading only: it never changes the score, and a task can pass with a "No" or fail with all "Yes". The judge's reasoning for each item is in the score's metadata on the **Scoring** tab.
+- **Also did:** database-changing actions (and transfers to a human) that the task didn't expect, compared in code.
+- **Expected but not done:** expected actions the agent never made, or got wrong.
+
+The judge costs about $0.01 per sample ($1.05 for the 20 × 4 run). The first 5-task run is not annotated.
+
 ## pass^k
 
 Inspect reports `accuracy`, which is pass^1: the share of all task × epoch attempts that passed. It has no built-in "all epochs pass" measure, so `summarize.py` computes τ-bench's pass^k from the log. For each task, it takes the number of epochs passed (c) out of the number run (n) and computes C(c,k)/C(n,k), the chance that k randomly chosen epochs all pass, then averages that over tasks. When k equals the number of epochs, this is just the share of tasks that passed every time.
