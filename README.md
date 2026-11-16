@@ -88,7 +88,7 @@ A trial **passes** only if all three of these hold:
    But one wrong field, such as the wrong payment method or one extra item, fails the trial.
    For tasks where the correct outcome is "change nothing", an agent that does nothing passes this
    check.
-3. **Written checks are met.** 40 of the 114 tasks (29 of the 74 training tasks, 8 of our fixed 20)
+3. **Written checks are met.** 40 of the 114 tasks (29 of the 74 training tasks, 7 of our fixed 20)
    also include plain-English assertions, such as "Agent should tell the user that there are
    exactly 10 t-shirt options available." An LLM judge reads the conversation and must agree that
    every assertion was met. These checks **count toward pass/fail**, because current τ²-bench does
@@ -188,22 +188,35 @@ hidden script) are filled in for each trial.
 
 ## Fixed task set
 
-`tasks/fixed_set.json` holds 20 task IDs, drawn once at random (seed 42) from τ²-bench's **train**
-split. Every comparison run uses this list, so prompt versions are compared on the same tasks.
-The **test** split (40 tasks) is held out and not used for anything yet.
+`tasks/fixed_set.json` holds the 20 task IDs used for every comparison run, so prompt versions are
+compared on the same tasks. All come from τ²-bench's **train** split; the **test** split (40 tasks)
+is held out and not used for anything yet.
 
-**Changed on 2026-11-16.** Three tasks were removed because their own task data is contradictory,
-so no agent can pass them under the official rule:
+**Current set (version 3, 2026-11-16): tasks where the agent has to say no.**
+10, 11, 13, 19, 25, 28, 31, 34, 46, 47, 48, 50, 57, 59, 63, 69, 82, 83, 91, 107.
 
-| Removed | Problem | Upstream report | Replaced by |
-|---|---|---|---|
-| 52 | Expected exchange changes the camera's resolution, which the customer script forbids | [issue #715](https://github.com/sierra-research/tau2-bench/issues/715) | 88 |
-| 105 | Expected exchange is impossible ($21.10 difference, $17.00 gift card is the only payment method) | [issue #321](https://github.com/sierra-research/tau2-bench/issues/321), [PR #571](https://github.com/sierra-research/tau2-bench/pull/571) | 20 |
-| 110 | Written check requires changing a default address that is already correct | none; Amazon's [τ²-Bench-Verified](https://github.com/amazon-agi/tau2-bench-verified) fixed the same flaw in sibling task 109 | 2 |
+The earlier sets were too easy: the agent passed about 99% of them, leaving nothing to improve. So we ran
+the agent on all 74 training tasks (2 trials each, with the pushback persona) and picked every task
+in which the customer pushed back on a refusal. We left out tasks whose own data is broken or
+ambiguous, or whose failure was the customer simulator's mistake:
 
-The replacements were drawn at random (seed 42) from the unused training tasks, skipping any whose
-expected database changes fail when replayed (none needed skipping). Each takes the removed task's
-place in the list. Runs before this date used the old set; the run log notes which.
+| Left out | Why |
+|---|---|
+| 52 | Expected exchange changes the camera's resolution, which the customer script forbids ([issue #715](https://github.com/sierra-research/tau2-bench/issues/715)) |
+| 105 | Expected exchange is impossible: $21.10 difference, $17.00 gift card is the only payment method ([issue #321](https://github.com/sierra-research/tau2-bench/issues/321), [PR #571](https://github.com/sierra-research/tau2-bench/pull/571)) |
+| 110 | Written check requires changing a default address that is already correct (Amazon's [τ²-Bench-Verified](https://github.com/amazon-agi/tau2-bench-verified) fixed the same flaw in sibling task 109) |
+| 67 | Orders carry no dates, but the task expects the agent to name the "most recent" one |
+| 98 | "Prefer the other card" depends on which card the agent offers first |
+| 76 | Its failure in the sweep was the customer simulator's mistake |
+| 66 | Open upstream issue: rejects a cancellation reason the policy allows ([issue #713](https://github.com/sierra-research/tau2-bench/issues/713)) |
 
-`--tasks 5` uses the first five: 19, 3, 88, 46 and 41. Three of them (19, 3, 46) have written
-checks, so even the smallest run exercises the judge.
+The set includes every task where the agent made a genuine mistake (19, 28, 47, 83, 107). Most of
+those mistakes were the same one: under pressure, the agent transfers the customer to a human
+instead of finishing the part of the request it is allowed to do.
+
+Because the set was picked from the agent's own failures, its pass rate understates how well the
+agent does in general. That is intended: it is a set for improving the prompt, not for reporting
+overall quality. The untouched test split is for that.
+
+Previous versions of the set are recorded in `tasks/fixed_set.json`; the run log says which runs
+used which version. `--tasks 5` uses the first five: 10, 11, 13, 19 and 25.

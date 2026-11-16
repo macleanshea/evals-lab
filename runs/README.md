@@ -2,7 +2,7 @@
 
 One row per run. Click a date for the full report. Official scores = code + judge (τ²-bench's rule); code-only shown for reference.
 
-Runs before 2026-11-16 00:45 used the original task set, which included tasks 52, 105 and 110; later runs replace them with 88, 20 and 2 (see `tasks/fixed_set.json`). On the 17 tasks both sets share, the v1 baseline (2026-11-16 00:12) scores pass^1 0.99, pass^4 0.94.
+Task sets (see `tasks/fixed_set.json`): runs up to 2026-11-16 00:12 used set v1; the 00:45 run used set v2 (tasks 52, 105, 110 swapped for 88, 20, 2); the 00:56 run is the 74-task train-split sweep; later runs use set v3, 20 tasks where the agent must refuse something. Scores are only comparable within the same task set.
 
 | Date | Prompt | Persona | Tasks x trials | pass^1 | pass^k | pass^1 code-only | pass^k code-only |
 |---|---|---|---|---|---|---|---|
