@@ -1,4 +1,25 @@
 {
+  "2026-11-16T21-37-52-00-00_tau2-airline-custom_LNWGLHaS9AXPhFwfmnHBcK.eval": {
+    "eval_id": "K9iX6EAnfvAF48XfAj6D6k",
+    "run_id": "aQu6uQ7kao2Hi3YdqmP7uD",
+    "task": "tau2_airline_custom",
+    "task_id": "LNWGLHaS9AXPhFwfmnHBcK",
+    "task_version": 0,
+    "version": 2,
+    "status": "success",
+    "invalidated": false,
+    "model": "anthropic/claude-haiku-5-5",
+    "model_roles": {
+      "user": "anthropic/claude-sonnet-5-5"
+    },
+    "started_at": "2026-11-16T21:37:52+00:00",
+    "completed_at": "2026-11-16T21:43:35+00:00",
+    "primary_metric": {
+      "name": "accuracy",
+      "value": 0.775,
+      "params": {}
+    }
+  },
   "2026-11-16T16-48-39-00-00_tau2-airline_RCuQu5GYUMrKiPcEVyBNAQ.eval": {
     "eval_id": "iGxoN5HbHJtRtDDDFFKXVS",
     "run_id": "cTuxDjBqeC8FZu5GjSqpT5",
