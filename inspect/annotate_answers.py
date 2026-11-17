@@ -108,12 +108,23 @@ def answer_text(results, assertions, unexpected, missing):
         for a, r in zip(assertions, results):
             # Pass = the item was met, Fail = it was not, whatever way the item is worded.
             lines.append(f"- **{'Pass' if r['metExpectation'] else 'Fail'}**: {a}")
+            if not r["metExpectation"]:
+                # Show why, so a strict or mistaken verdict is visible without digging.
+                lines.append(f"  - *Judge's reason:* {r['reasoning']}")
     lines.append("")
     lines.append("**Also did:** " + ("; ".join(unexpected) if unexpected else "nothing else"))
     if missing:
         lines.append("")
         lines.append("**Expected but not done:** " + "; ".join(missing))
     return "\n".join(lines)
+
+
+def sync_score_event(s, score):
+    """The transcript's Score section shows the score as recorded during the run (before
+    this script existed); copy the Answer into that recorded score too."""
+    for e in s.events:
+        if getattr(e, "event", None) == "score" and getattr(e, "score", None) is not None:
+            e.score.answer = score.answer
 
 
 def annotate(path, client, usage_total):
@@ -127,6 +138,7 @@ def annotate(path, client, usage_total):
         assertions = s.metadata["task"]["evaluation_criteria"].get("nl_assertions") or []
         unexpected, missing = action_diff(s)
         score.answer = answer_text(score.metadata[DONE_KEY]["results"], assertions, unexpected, missing)
+        sync_score_event(s, score)
 
     def work(s):
         assertions = s.metadata["task"]["evaluation_criteria"].get("nl_assertions") or []
@@ -141,6 +153,7 @@ def annotate(path, client, usage_total):
             unexpected, missing = action_diff(s)
             score = next(iter(s.scores.values()))
             score.answer = answer_text(results, assertions, unexpected, missing)
+            sync_score_event(s, score)
             score.metadata = {**(score.metadata or {}), DONE_KEY: {
                 "model": JUDGE_MODEL, "results": results,
                 "note": "For reading only. The port's airline grader does not use these assertions."}}
