@@ -1,0 +1,20 @@
+{
+  "description": "Airline samples whose expected answer we believe is wrong: it contradicts the airline policy or the database, so an agent that follows the policy fails. These are reported separately ('excluding suspects') and are never a target for prompt tuning. 'source' says how we know: 'amazon-verified' = amazon-agi/tau2-bench-verified FIXES.md changes the expected actions or data (https://github.com/amazon-agi/tau2-bench-verified/blob/main/FIXES.md); 'own-check' = our reading of the policy and database, with no published correction found. Test-split entries come from the published corrections only (data, not our results), decided before any test run.",
+  "train": {
+    "7":  {"source": "amazon-verified", "reason": "Expected cancels XEHM4B after an upgrade to economy; none of the cancellation conditions apply. Amazon changes it to an upgrade to business."},
+    "9":  {"source": "amazon-verified", "reason": "Expected cancels NQNU5R, whose flights already landed (policy: no cancellation once any portion is flown)."},
+    "14": {"source": "own-check", "reason": "Internally inconsistent: its purpose says $871 total with $44 on the Mastercard, but the expected booking has 3 passengers and $1,786 on the Mastercard; the customer is told to rebook only if the Mastercard charge is lower than for the original booking, which was paid by gift card ($0 on the Mastercard), so the customer should never accept."},
+    "21": {"source": "amazon-verified", "reason": "Amazon changes the reason for the call and the expected payment card (gift_card_6276644 -> gift_card_7480005, 'smallest gift card'); the original expected card is disputed."},
+    "23": {"source": "amazon-verified", "reason": "Expected bookings use passenger names Aarav Sanchez and Evelyn Wilson, which are not in the database (the real passengers are Raj Sanchez and Liam Wilson); Amazon corrects the names."},
+    "27": {"source": "amazon-verified", "reason": "Expected sends a delay certificate although the customer neither changes nor cancels the reservation (policy requires one of those)."},
+    "33": {"source": "own-check", "reason": "Expected charges 2 paid bags, but the customer is Gold in economy with 1 passenger: 3 free bags under the policy, so 2 bags cost nothing. (Amazon's 'Task 33' entry is a retail task.)"},
+    "38": {"source": "amazon-verified", "reason": "Expected sends a $50 delay certificate although the customer neither changes nor cancels the reservation; Amazon removes it."},
+    "39": {"source": "own-check", "reason": "Expected cancels MSJ4OA (economy, booked 10 days earlier, insurance covers health/weather only) for a 'change of plan'; no cancellation condition applies. Amazon rewrites the purpose to 'only cancel flights that are eligible for refunds' but lists no change to the actions."}
+  },
+  "test": {
+    "2":  {"source": "amazon-verified", "reason": "Amazon removes the expected $50 certificate (customer never changes or cancels)."},
+    "29": {"source": "amazon-verified", "reason": "Expected changes flights to a different destination airport (LGA -> JFK), which modification does not allow; Amazon changes it to cancel and rebook."},
+    "37": {"source": "amazon-verified", "reason": "Expected cancels NQNU5R, whose flights already landed; Amazon removes the cancellation."},
+    "44": {"source": "amazon-verified", "reason": "Expected cancels S61CZX, which no cancellation condition covers (customer is healthy, not business); Amazon removes the cancellation."}
+  }
+}

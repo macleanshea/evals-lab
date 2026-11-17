@@ -1,5 +1,7 @@
 # Run 2026-11-16 16:48: airline 20 × 4, analysis
 
+> **Partly superseded (2026-11-17):** the "refused an allowed action" failures (7, 9, 14, 23, 27) and sample 33 turned out to be wrong expected answers, not agent mistakes. See [`2026-11-17_review.md`](2026-11-17_review.md) and [`../suspect_samples.json`](../suspect_samples.json).
+
 Run: `inspect/logs/2026-11-16T16-48-39-00-00_tau2-airline_RCuQu5GYUMrKiPcEVyBNAQ.eval`. Per-task results are in [`2026-11-16T16-48-39_tau2-airline_20x4.txt`](2026-11-16T16-48-39_tau2-airline_20x4.txt). Agent: Haiku 5.5. Customer simulator: Sonnet 5.5. pass^1 0.64, pass^4 0.55.
 
 **The score we optimise is the grader's**: the port's airline grader, which checks the database and any required facts. The Target items in the Answer field come from an LLM judge and are for diagnosis only. They are not part of the score, and they are not a target to improve on their own.
