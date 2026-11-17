@@ -42,6 +42,12 @@ The differences that matter:
 
 The port records the main conversation from the customer simulator's side, so in its own log the customer is "assistant" and the agent is "user". Our slimmed logs swap this after scoring (`slim_log.py`), so in the **Messages** tab **assistant = the agent** and **user = the customer**, with the agent's tool calls and their results in line. The port's original customer-side copy is in **Store** → `original_messages_customer_side`. The score and its explanation are under **Scoring**.
 
+## Suspect samples and our own prompt
+
+Some expected answers in the airline data contradict the policy or the database, so an agent that follows the policy fails them. [`suspect_samples.json`](suspect_samples.json) lists them with reasons. Most are confirmed by Amazon's corrected τ²-bench; a few rest on our own check. We report scores both with and without them (`compare.py --suspects train`), and we never tune the prompt towards them.
+
+`tau2_custom.py` runs the same samples, simulator, tools and grader with our own guidance added after the policy (`prompts/airline_<v>.md`; `v0` adds nothing and is identical to the port). Prompts are tuned on the 30 training samples. The 20 test samples are run once, with a final prompt, and their failures are not used for tuning.
+
 ## The Answer field
 
 The port's grader leaves each sample's **Answer** blank. `annotate_answers.py`, run by `run.sh` after each run, fills it with:
