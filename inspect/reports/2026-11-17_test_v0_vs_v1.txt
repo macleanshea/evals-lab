@@ -1,0 +1,27 @@
+sample     v0     v1  change
+     2  0/4    0/4      (suspect)
+     6  4/4    4/4    
+     8  4/4    4/4    
+    13  4/4    4/4    
+    16  4/4    4/4    
+    18  4/4    3/4    WORSE
+    19  4/4    4/4    
+    22  4/4    4/4    
+    24  2/4    4/4    better
+    25  3/4    4/4    better
+    26  4/4    4/4    
+    29  0/4    0/4      (suspect)
+    30  4/4    4/4    
+    31  2/4    3/4    better
+    32  0/4    0/4    
+    35  0/4    0/4    
+    37  0/4    0/4      (suspect)
+    44  0/4    0/4      (suspect)
+    45  4/4    4/4    
+    48  4/4    4/4    
+
+all (20 samples): pass^1 v0 0.64 -> v1 0.68 (+0.04); pass^4 0.55 -> 0.60 (+0.05)
+
+excluding suspects 2,29,37,44 (16 samples): pass^1 v0 0.80 -> v1 0.84 (+0.05); pass^4 0.69 -> 0.75 (+0.06)
+
+Passed every epoch under v0 but not under v1: 18
